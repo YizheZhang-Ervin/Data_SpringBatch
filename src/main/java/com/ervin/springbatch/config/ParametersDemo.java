@@ -1,8 +1,6 @@
 package com.ervin.springbatch.config;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.Step;
-import org.springframework.batch.core.StepContribution;
+import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
@@ -13,30 +11,41 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Map;
+
 @Configuration
 @EnableBatchProcessing
-public class JobConfiguration {
-    // 注入创建任务对象的对象
+public class ParametersDemo implements StepExecutionListener {
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
-
-    // 任务的执行由step决定
-    // 注入创建step对象的对象
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-    // 任务对象
+
+    private Map<String,JobParameter> parameters;
     @Bean
-    public Job job001(){
-        return jobBuilderFactory.get("job001").start(step001()).build();
+    public Job parameterJob(){
+        return jobBuilderFactory.get("parameterJob").start(parameterStep()).build();
     }
+    // job用的数据是step中使用，所以只要给step传数据
     @Bean
-    public Step step001(){
-        return stepBuilderFactory.get("step001").tasklet(new Tasklet() {
+    public Step parameterStep(){
+        return stepBuilderFactory.get("parameterStep").listener(this).tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-                System.out.println("This is Job001-Step001");
+                System.out.println(parameters.get("info"));
                 return RepeatStatus.FINISHED;
             }
         }).build();
+    }
+
+    @Override
+    public void beforeStep(StepExecution stepExecution) {
+        // 拿到运行时传的参数
+        parameters = stepExecution.getJobParameters().getParameters();
+    }
+
+    @Override
+    public ExitStatus afterStep(StepExecution stepExecution) {
+        return null;
     }
 }

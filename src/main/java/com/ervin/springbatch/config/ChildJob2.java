@@ -15,28 +15,33 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableBatchProcessing
-public class JobConfiguration {
-    // 注入创建任务对象的对象
+public class ChildJob2 {
     @Autowired
     private JobBuilderFactory jobBuilderFactory;
-
-    // 任务的执行由step决定
-    // 注入创建step对象的对象
     @Autowired
     private StepBuilderFactory stepBuilderFactory;
-    // 任务对象
     @Bean
-    public Job job001(){
-        return jobBuilderFactory.get("job001").start(step001()).build();
-    }
-    @Bean
-    public Step step001(){
-        return stepBuilderFactory.get("step001").tasklet(new Tasklet() {
+    public Step childJob2Step1(){
+        return stepBuilderFactory.get("childJob2Step1").tasklet(new Tasklet() {
             @Override
             public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-                System.out.println("This is Job001-Step001");
+                System.out.println("This is childJob2Step1");
                 return RepeatStatus.FINISHED;
             }
         }).build();
+    }
+    @Bean
+    public Step childJob2Step2(){
+        return stepBuilderFactory.get("childJob2Step2").tasklet(new Tasklet() {
+            @Override
+            public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
+                System.out.println("This is childJob2Step2");
+                return RepeatStatus.FINISHED;
+            }
+        }).build();
+    }
+    @Bean
+    public Job childJob002(){
+        return jobBuilderFactory.get("childJob002").start(childJob2Step1()).next(childJob2Step2()).build();
     }
 }
